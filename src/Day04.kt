@@ -1,22 +1,14 @@
 fun main() {
     fun part1(input: List<String>): Int {
-        return input.asSequence().map { it.split(",") }
-            .map { Pair(it.first().split("-"), it.last().split("-")) }
-            .map { Pair(Pair(it.first.first().toInt(), it.first.last().toInt()), Pair(it.second.first().toInt(), it.second.last().toInt())) }
-            .filter {
-                (it.first.first >= it.second.first && it.first.second <= it.second.second)
-                        || (it.second.first >= it.first.first && it.second.second <= it.first.second )
-            }.count()
+        return input
+            .map { it.asRanges() }
+            .count { it.first fullyOverlaps it.second || it.second fullyOverlaps it.first }
     }
 
     fun part2(input: List<String>): Int {
-        return input.asSequence().map { it.split(",") }
-            .map { Pair(it.first().split("-"), it.last().split("-")) }
-            .map { Pair(Pair(it.first.first().toInt(), it.first.last().toInt()), Pair(it.second.first().toInt(), it.second.last().toInt())) }
-            .filter {
-                (it.first.first <= it.second.second && it.first.second >= it.second.first)
-                        || (it.second.first <= it.first.second && it.second.second >= it.first.first)
-            }.count()
+        return input
+            .map { it.asRanges() }
+            .count { it.first overlaps it.second }
     }
 
     // test if implementation meets criteria from the description, like:
@@ -28,3 +20,15 @@ fun main() {
     println(part1(input))
     println(part2(input))
 }
+
+private infix fun IntRange.fullyOverlaps(other: IntRange): Boolean =
+    first <= other.first && last >= other.last
+
+private infix fun IntRange.overlaps(other: IntRange): Boolean =
+    first <= other.last && last >= other.first
+
+private fun String.asIntRange(): IntRange =
+    substringBefore("-").toInt()..substringAfter("-").toInt()
+
+private fun String.asRanges(): Pair<IntRange, IntRange> =
+    substringBefore(",").asIntRange() to substringAfter(",").asIntRange()
