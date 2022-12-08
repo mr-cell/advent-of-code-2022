@@ -1,37 +1,35 @@
+private val part1Scores =
+    mapOf(
+        "A X" to 1 + 3,
+        "A Y" to 2 + 6,
+        "A Z" to 3 + 0,
+        "B X" to 1 + 0,
+        "B Y" to 2 + 3,
+        "B Z" to 3 + 6,
+        "C X" to 1 + 6,
+        "C Y" to 2 + 0,
+        "C Z" to 3 + 3,
+    )
+
+private val part2Scores =
+    mapOf(
+        "A X" to 3 + 0,
+        "A Y" to 1 + 3,
+        "A Z" to 2 + 6,
+        "B X" to 1 + 0,
+        "B Y" to 2 + 3,
+        "B Z" to 3 + 6,
+        "C X" to 2 + 0,
+        "C Y" to 3 + 3,
+        "C Z" to 1 + 6,
+    )
+
 fun main() {
-    val roundOutcomes = mapOf(
-        Pair(Pair("A", "X"), 3),
-        Pair(Pair("A", "Y"), 6),
-        Pair(Pair("A", "Z"), 0),
-        Pair(Pair("B", "X"), 0),
-        Pair(Pair("B", "Y"), 3),
-        Pair(Pair("B", "Z"), 6),
-        Pair(Pair("C", "X"), 6),
-        Pair(Pair("C", "Y"), 0),
-        Pair(Pair("C", "Z"), 3),
-    )
+    fun part1(input: List<String>): Int =
+        input.sumOf { part1Scores[it] ?: 0 }
 
-    val shapePoints = mapOf(
-        Pair("X", 1),
-        Pair("Y", 2),
-        Pair("Z", 3),
-    )
-
-
-    fun calculateScore(signs: Pair<String, String>): Int {
-        return roundOutcomes[signs]!! + shapePoints[signs.second]!!
-    }
-
-    fun part1(input: List<String>): Int {
-        return input
-            .map { it.split(" ") }
-            .map { Pair(it[0], it[1]) }
-            .sumOf { calculateScore(it) }
-    }
-
-    fun part2(input: List<String>): Int {
-        return 0
-    }
+    fun part2(input: List<String>): Int =
+        input.sumOf { part2Scores[it] ?: 0 }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day02_test")
