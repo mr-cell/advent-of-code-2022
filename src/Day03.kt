@@ -1,37 +1,10 @@
 fun main() {
-    fun part1(input: List<String>): Int {
-        return input
-            .map { Pair(it.substring(0, it.length/2), it.substring(it.length/2)) }
-            .map { it.first.toCharArray().intersect(it.second.toCharArray().toList().toSet()) }
-            .map { it.distinct() }
-            .flatMap {
-                it.map { char ->
-                    return@map if (CharRange('a', 'z').contains(char)) {
-                        char.minus('a') + 1
-                    } else {
-                        char.lowercaseChar().minus('a') + 27
-                    }
-                }
-            }
-            .sum()
-    }
+    fun part1(input: List<String>): Int =
+        input.sumOf { it.sharedItem().priority() }
 
-    fun part2(input: List<String>): Int {
-        return input
-            .map { it.toCharArray() }
-            .windowed(3, 3)
-            .map { it.reduce { acc, chars -> acc.intersect(chars.toList().toSet()).toCharArray()} }
-            .flatMap {
-                it.map { char ->
-                    return@map if (CharRange('a', 'z').contains(char)) {
-                        char.minus('a') + 1
-                    } else {
-                        char.lowercaseChar().minus('a') + 27
-                    }
-                }
-            }
-            .sum()
-    }
+    fun part2(input: List<String>): Int =
+        input.chunked(3)
+            .sumOf { it.sharedItem().priority() }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day03_test")
@@ -42,3 +15,21 @@ fun main() {
     println(part1(input))
     println(part2(input))
 }
+
+private fun Char.priority(): Int = when (this) {
+    in 'a'..'z' -> (this - 'a') + 1
+    in 'A'..'Z' -> (this - 'A') + 27
+    else -> throw IllegalArgumentException("Letter not in range $this")
+}
+
+private fun List<String>.sharedItem(): Char =
+    map { it.toSet() }
+        .reduce { left, right -> left intersect right }
+        .first()
+
+private fun String.sharedItem(): Char =
+    listOf(
+        substring(0..length / 2),
+        substring(length / 2)
+    )
+        .sharedItem()
