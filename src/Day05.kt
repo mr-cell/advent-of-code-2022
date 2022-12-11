@@ -1,31 +1,25 @@
 fun main() {
+
+    fun performInstructions(instructions: List<Instruction>, stacks: Stacks, reverse: Boolean) {
+        instructions.forEach { (howMany, from, to) ->
+            val crates = stacks[from].take(howMany)
+            repeat(howMany) { stacks[from].removeFirst() }
+            stacks[to].addAll(0, if (reverse) crates.reversed() else crates)
+        }
+    }
+
     fun part1(input: List<String>): String {
         val stacks = readStacks(input)
         val instructions = readInstructions(input)
-
-        instructions.forEach { (howMany, from, to) ->
-            (1..howMany).forEach { _ ->
-                val crate = stacks[from].removeAt(0)
-                stacks[to].add(0, crate)
-            }
-        }
-
-        return stacks.map { it[0] }.joinToString("")
+        performInstructions(instructions, stacks, true)
+        return stacks.tops()
     }
 
     fun part2(input: List<String>): String {
         val stacks = readStacks(input)
         val instructions = readInstructions(input)
-
-        instructions.forEach { (howMany, from, to) ->
-            val crates = (1..howMany).map {
-                stacks[from].removeAt(0)
-            }
-
-            stacks[to].addAll(0, crates)
-        }
-
-        return stacks.map { it[0] }.joinToString("")
+        performInstructions(instructions, stacks, false)
+        return stacks.tops()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -37,6 +31,8 @@ fun main() {
     println(part1(input))
     println(part2(input))
 }
+
+private fun List<MutableList<Char>>.tops(): String = this.map { it.first() }.joinToString("")
 
 private fun readStacks(input: List<String>): Stacks {
     val stackRows = input.takeWhile { it.contains("[") }
