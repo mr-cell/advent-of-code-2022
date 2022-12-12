@@ -1,59 +1,21 @@
 fun main() {
 
     fun part1(input: List<String>): Int {
-        var visibleTrees = 0
         val grid = parseInput(input)
-        (grid.indices).forEach { i ->
-            (0 until grid[i].size).forEach { j ->
-                if (i == 0 || i == grid.size - 1 || j == 0 || j == grid[i].size - 1) {
-                    visibleTrees++
-                } else {
-                    val treeSize = grid[i][j]
-                    if ((i + 1 until grid.size).all { k -> grid[k][j] < treeSize }) {
-                        visibleTrees++
-                    }
-                    else if ((i - 1 downTo  0).all { k -> grid[k][j] < treeSize }) {
-                        visibleTrees++
-                    }
-                    else if ((j + 1 until grid[i].size).all { k ->  grid[i][k] < treeSize}) {
-                        visibleTrees++
-                    }
-                    else if ((j - 1 downTo  0).all { k -> grid[i][k] < treeSize }) {
-                        visibleTrees++
-                    }
-                }
+        return (1 until grid.size - 1).sumOf { y ->
+            (1 until grid[y].size - 1).count { x ->
+                grid.isVisible(x, y)
             }
-        }
-        return visibleTrees
+        } + (2 * grid.size) + (2 * grid[0].size) - 4
     }
 
     fun part2(input: List<String>): Int {
-        var bestScenicScore = 0
         val grid = parseInput(input)
-        (grid.indices).forEach { i ->
-            (0 until grid[i].size).forEach { j ->
-                val treeSize = grid[i][j]
-                val ss1 = (i + 1 until grid.size)
-                    .map { k -> grid[k][j] }
-                    .indexOfFirst { it >= treeSize }
-                    .let { if (it > 0) it + 1 else if (it < 0)  (i + 1 until grid.size).count() else 0 }
-                val ss2 = (i - 1 downTo 0)
-                    .map { k -> grid[k][j] }
-                    .indexOfFirst { it >= treeSize }
-                    .let { if (it > 0) it + 1 else if (it < 0) (i - 1 downTo 0).count()  else 0 }
-                val ss3 = (j + 1 until grid[i].size)
-                    .map { k -> grid[i][k] }
-                    .indexOfFirst { it >= treeSize }
-                    .let { if (it > 0) it + 1 else if (it < 0) (j + 1 until grid[i].size).count() else 0 }
-                val ss4 = (j - 1 downTo 0)
-                    .map {k -> grid[i][k] }
-                    .indexOfFirst { it >= treeSize }
-                    .let { if (it > 0) it + 1 else if (it < 0) (j - 1 downTo 0).count() else 0 }
-                val scenicScore = ss1 * ss2 * ss3 * ss4
-                if (scenicScore > bestScenicScore) bestScenicScore = scenicScore
+        return (1 until grid.size - 1).maxOf { y ->
+            (1 until grid[y].size - 1).maxOf { x ->
+                grid.scoreAt(x, y)
             }
         }
-        return bestScenicScore
     }
 
     // test if implementation meets criteria from the description, like:
@@ -66,7 +28,23 @@ fun main() {
     println(part2(input))
 }
 
-private fun parseInput(input: List<String>): Array<Array<Int>> =
-    input.map { row -> row.split("").filter { it.isNotBlank() }.map { it.toInt() } }
-        .map { it.toTypedArray() }
-        .toTypedArray()
+private fun parseInput(input: List<String>): Array<IntArray> =
+    input.map { row -> row.map(Char::digitToInt).toIntArray() }.toTypedArray()
+
+private fun Array<IntArray>.viewFrom(x: Int, y: Int): List<List<Int>> =
+    listOf(
+        (y - 1 downTo 0).map { this[it][x] },
+        (y + 1 until this.size).map { this[it][x] },
+        this[y].take(x).asReversed(),
+        this[y].drop(x + 1)
+    )
+
+private fun Array<IntArray>.isVisible(x: Int, y: Int): Boolean =
+    viewFrom(x, y).any { direction ->
+        direction.all { it < this[y][x] }
+    }
+
+private fun Array<IntArray>.scoreAt(x: Int, y: Int): Int =
+    viewFrom(x, y).map { direction ->
+        direction.takeUntil { it >= this[y][x] }.count()
+    }.product()
