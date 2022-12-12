@@ -28,13 +28,38 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return 0
+        var bestScenicScore = 0
+        val grid = parseInput(input)
+        (grid.indices).forEach { i ->
+            (0 until grid[i].size).forEach { j ->
+                val treeSize = grid[i][j]
+                val ss1 = (i + 1 until grid.size)
+                    .map { k -> grid[k][j] }
+                    .indexOfFirst { it >= treeSize }
+                    .let { if (it > 0) it + 1 else if (it < 0)  (i + 1 until grid.size).count() else 0 }
+                val ss2 = (i - 1 downTo 0)
+                    .map { k -> grid[k][j] }
+                    .indexOfFirst { it >= treeSize }
+                    .let { if (it > 0) it + 1 else if (it < 0) (i - 1 downTo 0).count()  else 0 }
+                val ss3 = (j + 1 until grid[i].size)
+                    .map { k -> grid[i][k] }
+                    .indexOfFirst { it >= treeSize }
+                    .let { if (it > 0) it + 1 else if (it < 0) (j + 1 until grid[i].size).count() else 0 }
+                val ss4 = (j - 1 downTo 0)
+                    .map {k -> grid[i][k] }
+                    .indexOfFirst { it >= treeSize }
+                    .let { if (it > 0) it + 1 else if (it < 0) (j - 1 downTo 0).count() else 0 }
+                val scenicScore = ss1 * ss2 * ss3 * ss4
+                if (scenicScore > bestScenicScore) bestScenicScore = scenicScore
+            }
+        }
+        return bestScenicScore
     }
 
     // test if implementation meets criteria from the description, like:
     val testInput = readInput("Day08_test")
     check(part1(testInput) == 21)
-    check(part2(testInput) == 0)
+    check(part2(testInput) == 8)
 
     val input = readInput("Day08")
     println(part1(input))
