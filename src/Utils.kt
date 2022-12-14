@@ -26,3 +26,11 @@ inline fun <T> Iterable<T>.takeUntil(predicate: (T) -> Boolean): List<T> {
 }
 
 fun Iterable<Int>.product(): Int = reduce { a, b -> a * b }
+
+data class Position(val x: Int, val y: Int) {
+    fun distance(other: Position): Pair<Int, Int> =
+        Pair(other.x - this.x, other.y - this.y)
+
+    fun move(x: Int = 0, y: Int = 0): Position =
+        copy(x = this.x + x, y = this.y + y)
+}
