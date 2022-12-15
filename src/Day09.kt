@@ -1,33 +1,17 @@
-import kotlin.math.abs
+import java.lang.IllegalArgumentException
+import kotlin.math.absoluteValue
+import kotlin.math.sign
 
 fun main() {
 
     fun part1(input: List<String>): Int {
         val moves = parseInput(input)
-
-        return moves
-            .toHeadPositions()
-            .fold(mutableListOf(Position(0, 0))) { tails, head ->
-                tails.add(tails.last().newKnotPosition(head))
-                tails
-            }.distinct().count()
+        return followPath(moves, 2)
     }
 
     fun part2(input: List<String>): Int {
         val moves = parseInput(input)
-
-        val initialKnotPositions = (0 until 9).map { _ -> Position(0, 0) }.toMutableList()
-        return moves
-            .toHeadPositions()
-            .fold(mutableListOf(initialKnotPositions)) { knotsPositions, head ->
-                val lastKnotsPositions = knotsPositions.last()
-                val currentKnotPositions = mutableListOf(lastKnotsPositions[0].newKnotPosition(head))
-                knotsPositions.add(currentKnotPositions)
-                (1 until 9).map {
-                    knotsPositions.last().add(lastKnotsPositions[it].newKnotPosition(currentKnotPositions[it - 1]))
-                }
-                knotsPositions
-            }.map { it.last() }.distinct().count()
+        return followPath(moves, 10)
     }
 
     // test if implementation meets criteria from the description, like:
@@ -42,43 +26,46 @@ fun main() {
     println(part2(input))
 }
 
-private fun parseInput(input: List<String>): List<Move> =
-    input.map { it.split(" ") }
-        .map { Pair(it.first(), it.last().toInt()) }
-        .flatMap {
-            (0 until it.second).map { _ ->
-                when (it.first) {
-                    "L" -> Pair(-1 , 0)
-                    "R" -> Pair(1, 0)
-                    "U" -> Pair(0, 1)
-                    else -> Pair(0, -1) // down
-                }
+private fun parseInput(input: List<String>): String =
+    input.joinToString("") {
+        val direction = it.substringBefore(" ")
+        val numberOfMoves = it.substringAfter(" ").toInt()
+        direction.repeat(numberOfMoves)
+    }
+
+private fun followPath(headPath: String, knots: Int): Int {
+    val rope = Array(knots) { Position(0, 0) }
+    val tailVisits = mutableSetOf(Position(0, 0))
+
+    headPath.forEach { direction ->
+        rope[0] = rope[0].move(direction)
+        rope.indices.windowed(2, 1) { (head, tail) ->
+            if (!rope[head].touches(rope[tail])) {
+                rope[tail] = rope[tail].moveTowards(rope[head])
             }
         }
-
-private fun List<Move>.toHeadPositions(): List<Position> {
-    return this.fold(mutableListOf(Position(0, 0))) { headPositions, move ->
-        headPositions.add(headPositions.last().move(x = move.first, y = move.second))
-        headPositions
+        tailVisits += rope.last()
     }
+    return tailVisits.size
 }
 
-private fun Position.newKnotPosition(precedingKnotPosition: Position): Position {
-    val distance = this.distance(precedingKnotPosition)
-    val x = if (distance.first == 0) 1  else distance.first / abs(distance.first)
-    val y = if (distance.second == 0) 1 else distance.second / abs(distance.second)
+data class Position(val x: Int, val y: Int) {
 
-    return if ((abs(distance.first) == 2 && abs(distance.second) >= 1)
-        || (abs(distance.first) >= 1 && abs(distance.second) == 2)) {
+    fun touches(other: Position): Boolean =
+        (x - other.x).absoluteValue <= 1 && (y - other.y).absoluteValue <= 1
 
-        this.move(x = x, y = y)
-    } else if (abs(distance.first) == 2) {
-        this.move(x = x)
-    } else if (abs(distance.second) == 2) {
-        this.move(y = y)
-    } else {
-        this.move()
-    }
+    fun moveTowards(other: Position): Position =
+        Position(
+            x = (other.x - x).sign + x,
+            y = (other.y - y).sign + y
+        )
+
+    fun move(direction: Char): Position =
+        when (direction) {
+            'U' -> copy(y = y + 1)
+            'D' -> copy(y = y - 1)
+            'L' -> copy(x = x - 1)
+            'R' -> copy(x = x + 1)
+            else -> throw IllegalArgumentException("Unknown direction: $direction")
+        }
 }
-
-typealias Move = Pair<Int, Int>
