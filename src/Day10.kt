@@ -3,29 +3,13 @@ import kotlin.math.absoluteValue
 fun main() {
 
     fun part1(input: List<String>): Int {
-        val instructions = parseInput(input)
-        return CpuRegister(instructions)
-            .executeUpTo(220)
-            .let {values ->
-                (20..220 step 40).sumOf { values[it - 1] * it  }
-            }
+        val signals = parseInput(input).runningReduce(Int::plus)
+        return signals.sampleSignals().sum()
     }
 
     fun part2(input: List<String>) {
-        val instructions = parseInput(input)
-        val register = CpuRegister(instructions)
-        val registerValues = register.executeUpTo(240)
-        (0 until 6).forEach { y ->
-            val line = (0 until 40).joinToString("") { x ->
-                val drawCycle = x + (40 * y)
-                if ((registerValues[drawCycle] - x).absoluteValue <= 1) {
-                    "#"
-                } else {
-                    "."
-                }
-            }
-            println(line)
-        }
+        val signals = parseInput(input).runningReduce(Int::plus)
+        signals.screen().print()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -38,33 +22,33 @@ fun main() {
     part2(input)
 }
 
-private fun parseInput(input: List<String>): List<CpuInstruction> {
-    return input.map { instruction ->
-        if (instruction.startsWith("addx")) {
-            CpuInstruction(instruction.split(" ").last().toInt(), 2)
-        } else {
-            CpuInstruction(0, 1)
-        }
-    }
-}
-
-private class CpuRegister(private val instructions: List<CpuInstruction>) {
-
-    var value = 1
-        private set
-
-    val seq = sequence<Int> {
-        instructions.forEach {instruction ->
-            (1..instruction.cycleDuration).forEach { _ ->
-                yield(value)
+private fun parseInput(input: List<String>): List<Int> {
+    return buildList {
+        add(1)
+        input.forEach { line ->
+            add(0)
+            if (line.startsWith("addx")) {
+                add(line.substringAfter(" ").toInt())
             }
-            value += instruction.registerIncrement
         }
-    }
-
-    fun executeUpTo(cycles: Int): List<Int> {
-        return seq.take(cycles).toList()
     }
 }
 
-private data class CpuInstruction(val registerIncrement: Int, val cycleDuration: Int)
+private fun List<Int>.sampleSignals(): List<Int> =
+    (60.. size step 40).map { cycle ->
+        cycle * this[cycle - 1]
+    } + this[19] * 20
+
+private fun List<Int>.screen(): List<Boolean> =
+    this.mapIndexed { pixel, signal ->
+        (signal - (pixel % 40)).absoluteValue <= 1
+    }
+
+private fun List<Boolean>.print() {
+    this.windowed(40, 40, false).forEach { row ->
+        row.forEach { pixel ->
+            print(if(pixel) '#' else ' ')
+        }
+        println()
+    }
+}
